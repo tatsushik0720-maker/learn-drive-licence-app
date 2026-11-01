@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gakuka-study-v5';
+const CACHE_NAME = 'gakuka-study-v6';
 const APP_BASE = self.registration.scope;
 const APP_INDEX = new URL('index.html', APP_BASE).href;
 const APP_FILES = [
