@@ -13,20 +13,6 @@
 
 Safariで一度サイトを開き、画面が読み込まれてからホーム画面に追加してください。
 
-## GitHubへ初回アップロードする例
-
-GitHubで空のリポジトリを作り、以下をPowerShellで実行します。`<ユーザー名>` と `<リポジトリ名>` は作成したリポジトリに置き換えてください。
-
-```powershell
-cd "C:\Users\tatsu\dev-projects\learn drive lisence-app"
-git init -b main
-git add .
-git commit -m "学科試験トレーニングを追加"
-git remote add origin https://github.com/<ユーザー名>/<リポジトリ名>.git
-git push -u origin main
-```
-
-`.gitignore` は冊子の元写真をアップロード対象から外し、アプリ表示に使う切り出し画像だけを含めます。問題文や切り出し画像を公開リポジトリで公開してよいことを確認してからpushしてください。GitHub FreeでGitHub Pagesを利用する場合、公開リポジトリが必要です。
 
 ## 収録内容と採点
 
