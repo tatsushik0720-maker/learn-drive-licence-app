@@ -246,7 +246,7 @@ function drop(key) { try { localStorage.removeItem(key); } catch {} }
 const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 // 形の壊れた記録は読み飛ばす（1件のせいでアプリが開かなくならないように）
 function validRecord(a) {
-  return isObj(a) && typeof a.set === 'string' && !!setOf(a.set) && Array.isArray(a.questions) &&
+  return isObj(a) && typeof a.set === 'string' && hasSet(a) && Array.isArray(a.questions) &&
     a.questions.every(q => isObj(q) && (q.items === undefined || (Array.isArray(q.items) && q.items.every(isObj))));
 }
 function readHistory() { const v = load(HISTORY_KEY, []); return Array.isArray(v) ? v.filter(validRecord) : []; }
@@ -254,8 +254,45 @@ const writeHistory = h => save(HISTORY_KEY, h);
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}
 
 /* ---------- 問題の組み立て ---------- */
-const setOf = name => SETS.find(s => s.name === name);
-const questionCount = t => t.q.length + (t.ill ? t.ill.length : 0);
+// ランダムのセット。始めるたびに同じ免許の全セットから選び、選んだ問題は picks として残す
+const RANDOM = [
+  { name: '特ランダム', kind: '仮免許', minutes: 30, pool: true, qCount: 50, illCount: 0, lead: '特1〜特4から50問' },
+  { name: 'Noランダム', kind: '本免許', minutes: 50, pool: true, qCount: 90, illCount: 5, lead: '文章90問・イラスト5問' },
+];
+const setOf = name => SETS.find(s => s.name === name) || RANDOM.find(s => s.name === name);
+const questionCount = t => t.pool ? t.qCount + t.illCount : t.q.length + (t.ill ? t.ill.length : 0);
+function validPicks(def, picks) {
+  const ok = (list, n, field) => Array.isArray(list) && list.length === n && list.every(p => { const t = Array.isArray(p) && SETS.find(s => s.name === p[0]); return !!t && !!(t[field] || [])[p[1]]; });
+  return isObj(picks) && ok(picks.q, def.qCount, 'q') && ok(picks.ill, def.illCount, 'ill');
+}
+const hasSet = o => { const t = setOf(o.set); return !!t && (!t.pool || validPicks(t, o.picks)); };
+// 同じ文の問題が別のセットにもあるので、1回の中で重ならないように選ぶ
+function pickFrom(pool, field, n, textOf) {
+  const all = pool.flatMap(t => t[field].map((item, i) => ({ name: t.name, i, text: textOf(item) })));
+  const seen = new Set(), out = [];
+  for (const k of shuffledOrder(all.length)) {
+    if (out.length === n) break;
+    if (seen.has(all[k].text)) continue;
+    seen.add(all[k].text);
+    out.push([all[k].name, all[k].i]);
+  }
+  return out;
+}
+function makePicks(def) {
+  const pool = SETS.filter(t => t.kind === def.kind);
+  return { q: pickFrom(pool, 'q', def.qCount, q => q.t), ill: def.illCount ? pickFrom(pool, 'ill', def.illCount, s => s.items.map(it => it.t).join()) : [] };
+}
+// セッションや記録が指す問題の一式。ランダムは picks から組み立てる（番号は 1〜90 と 91〜95）
+function setFor(o) {
+  const def = setOf(o.set);
+  if (!def.pool) return def;
+  const from = t => SETS.find(s => s.name === t);
+  return {
+    name: def.name, kind: def.kind, minutes: def.minutes,
+    q: o.picks.q.map(([n, i]) => ({ ...from(n).q[i], src: `${n} 問${i + 1}` })),
+    ...(def.illCount ? { ill: o.picks.ill.map(([n, i]) => ({ ...from(n).ill[i], src: `${n} 問${91 + i}` })) } : {}),
+  };
+}
 // 画面の1枚ずつ。普通の問題は1問、イラスト問題は3小問で1枚
 function slides(t) {
   const list = t.q.map((q, i) => ({ number: i + 1, keys: [String(i + 1)], q }));
@@ -264,7 +301,7 @@ function slides(t) {
 }
 // 解く順に並べた問題。練習モードは始めるときに混ぜた順番（order）を使う
 function sessionSlides(s) {
-  const list = slides(setOf(s.set));
+  const list = slides(setFor(s));
   return s.order ? s.order.map(i => list[i]) : list;
 }
 function shuffledOrder(n) {
@@ -279,7 +316,7 @@ function expected(t, key) {
 function slideDone(sl, answers) { return sl.keys.every(k => answers[k]); }
 
 function makeAttempt(s) {
-  const t = setOf(s.set), special = !t.ill, questions = [];
+  const t = setFor(s), special = !t.ill, questions = [];
   t.q.forEach((q, i) => {
     const n = i + 1, given = s.answers[n] || null, ok = given === q.a, max = special ? 2 : 1;
     questions.push({ number: n, answered: !!given, answer: given, correctAnswer: q.a, correct: given ? ok : null, points: ok ? max : 0, maxPoints: max });
@@ -291,7 +328,7 @@ function makeAttempt(s) {
     questions.push({ number, answered: allAnswered, correct: allAnswered ? allCorrect : null, points: allCorrect ? 2 : 0, maxPoints: 2, items });
   });
   const score = questions.reduce((sum, q) => sum + q.points, 0), maxScore = questions.reduce((sum, q) => sum + q.maxPoints, 0);
-  return { id: Date.now(), date: new Date().toISOString(), set: t.name, kind: t.kind, mode: s.mode, score, maxScore, questions };
+  return { id: Date.now(), date: new Date().toISOString(), set: t.name, kind: t.kind, mode: s.mode, score, maxScore, questions, ...(s.picks ? { picks: s.picks } : {}) };
 }
 
 // 前の版は正答表に間違いがあった。残っている回答を今の正答で採点し直す（何度呼んでも同じ結果）
@@ -308,7 +345,7 @@ function rescoreAll() {
       if (q.items) q.items.forEach(it => { if (it.answer) answers[`${q.number}-${it.item}`] = it.answer; });
       else if (q.answer) answers[q.number] = q.answer;
     });
-    const fresh = makeAttempt({ set: a.set, mode: a.mode, answers });
+    const fresh = makeAttempt({ set: a.set, mode: a.mode, answers, picks: a.picks });
     if (JSON.stringify(fresh.questions) !== JSON.stringify(a.questions) || fresh.score !== a.score) {
       history[i] = { ...fresh, id: a.id, date: a.date };
       changed = true;
@@ -320,7 +357,7 @@ rescoreHistory();
 
 /* ---------- 画面の状態 ---------- */
 let tab = 'home', session = load(SESSION_KEY, null), tick = null, view = null, reviewFilter = 'wrong', toastTimer = null;
-if (session && (!setOf(session.set) || !session.answers)) { session = null; drop(SESSION_KEY); }
+if (session && (!hasSet(session) || !session.answers)) { session = null; drop(SESSION_KEY); }
 const saveSession = () => save(SESSION_KEY, session);
 
 /* ---------- アイコン（塗りの形） ---------- */
@@ -378,7 +415,7 @@ function setStats(name) {
 function setRow(t) {
   const st = setStats(t.name);
   const val = st.best !== null ? `<span class="val ${st.best >= PASS ? 'pass' : ''}">${st.best >= PASS ? CHECK + ' ' : ''}最高 ${st.best}点</span>` : st.count ? `<span class="val">練習 ${st.count}回</span>` : '';
-  return `<button class="row" data-set="${t.name}"><span class="main">${t.name}<small>${questionCount(t)}問・${t.minutes}分</small></span>${val}${CHEV}</button>`;
+  return `<button class="row" data-set="${t.name}"><span class="main">${t.name}<small>${t.lead || `${questionCount(t)}問`}・${t.minutes}分</small></span>${val}${CHEV}</button>`;
 }
 function backupNotice() {
   const count = readHistory().length, last = load(BACKUP_KEY, null);
@@ -392,13 +429,13 @@ function renderHome() {
     const left = session.mode === 'exam' ? `残り ${fmtClock(remaining(session))}` : '練習';
     resume = `<h2 class="h">途中の問題</h2><div class="list"><button class="row" id="resume"><span class="main">${session.set} の続きから<small>${left}・${answeredCount(session)} / ${questionCount(setOf(session.set))} 問に回答ずみ</small></span>${CHEV}</button></div>`;
   }
-  const group = kind => SETS.filter(t => t.kind === kind).map(setRow).join('');
+  const group = kind => SETS.concat(RANDOM).filter(t => t.kind === kind).map(setRow).join('');
   main.innerHTML = backupNotice() + resume + `<h2 class="h">仮免許</h2><div class="list">${group('仮免許')}</div><h2 class="h">本免許</h2><div class="list">${group('本免許')}</div>`;
   if ($('#resume')) $('#resume').onclick = () => { view = { type: 'exam' }; render(); };
   if ($('#goBackup')) $('#goBackup').onclick = exportBackup;
   main.querySelectorAll('[data-set]').forEach(b => b.onclick = () => openStart(b.dataset.set));
 }
-function answeredCount(s) { return slides(setOf(s.set)).filter(sl => slideDone(sl, s.answers)).length; }
+function answeredCount(s) { return slides(setFor(s)).filter(sl => slideDone(sl, s.answers)).length; }
 
 function openStart(name, mode = 'exam') {
   const t = setOf(name);
@@ -407,12 +444,13 @@ function openStart(name, mode = 'exam') {
   openSheet(`<div class="sh-bar"><button class="bar-btn" id="cancel">キャンセル</button><h2>${t.kind} ${t.name}</h2><span></span></div>
     <p class="sh-info">${questionCount(t)}問・${t.minutes}分・${PASS}点以上で合格</p>
     <div class="seg" role="group" aria-label="モード"><button data-m="exam" class="${mode === 'exam' ? 'on' : ''}" aria-pressed="${mode === 'exam'}">試験モード</button><button data-m="practice" class="${mode === 'practice' ? 'on' : ''}" aria-pressed="${mode === 'practice'}">練習モード</button></div>
-    <p class="sh-note">${note}</p>${warn}
+    <p class="sh-note">${t.pool ? `${t.lead}を選びます。始めるたびに問題が変わります。` : ''}${note}</p>${warn}
     <button class="btn" id="go">始める</button>`);
   $('#sheet').querySelectorAll('[data-m]').forEach(b => b.onclick = () => openStart(name, b.dataset.m));
   $('#cancel').onclick = closeSheet;
   $('#go').onclick = () => {
     session = { set: name, mode, answers: {}, index: 0, endAt: mode === 'exam' ? Date.now() + t.minutes * 60000 : null };
+    if (t.pool) session.picks = makePicks(t);
     if (mode === 'practice') session.order = shuffledOrder(questionCount(t));
     saveSession();
     view = { type: 'exam' };
@@ -435,7 +473,7 @@ function feedback(t, key, explanation) {
 function renderExam() {
   const s = session;
   if (!s) { view = null; return render(); }
-  const t = setOf(s.set);
+  const t = setFor(s);
   if (s.mode === 'exam' && remaining(s) <= 0) return finish(true);
   const list = sessionSlides(s);
   s.index = Math.max(0, Math.min(s.index, list.length - 1));
@@ -453,11 +491,11 @@ function renderExam() {
     tick = setInterval(update, 1000);
   }
   if (sl.q) {
-    main.innerHTML = `<div class="q-no">${s.order ? `${pos}問目 / ${list.length}（問題番号 ${sl.number}）` : `問題 ${sl.number} / ${list.length}`}</div><p class="q-text">${esc(sl.q.t)}</p>
+    main.innerHTML = `<div class="q-no">${s.order ? `${pos}問目 / ${list.length}（${sl.q.src || `問題番号 ${sl.number}`}）` : `問題 ${sl.number} / ${list.length}${sl.q.src ? `（${sl.q.src}）` : ''}`}</div><p class="q-text">${esc(sl.q.t)}</p>
       ${sl.q.img ? `<img class="q-img" src="${sl.q.img}" alt="問題${sl.number}の標識や図">` : ''}
       ${markButtons(sl.keys[0], s.mode === 'practice' && !!s.answers[sl.keys[0]])}${feedback(t, sl.keys[0], sl.q.e)}`;
   } else {
-    main.innerHTML = `<div class="q-no">${s.order ? `${pos}問目・` : ''}イラスト問題 ${sl.number}（3つとも正解で2点）</div><p class="q-text">${esc(sl.scene.stem)}</p>
+    main.innerHTML = `<div class="q-no">${s.order ? `${pos}問目・` : ''}イラスト問題 ${sl.scene.src || sl.number}（3つとも正解で2点）</div><p class="q-text">${esc(sl.scene.stem)}</p>
       <img class="q-img wide" src="${sl.scene.img}" alt="問題${sl.number}のイラスト">
       ${sl.scene.items.map((it, j) => `<div class="item"><p class="q-text"><b>問${j + 1}</b> ${esc(it.t)}</p>${markButtons(sl.keys[j], s.mode === 'practice' && !!s.answers[sl.keys[j]])}${feedback(t, sl.keys[j], it.e)}</div>`).join('')}`;
   }
@@ -481,7 +519,7 @@ function answer(key, value) {
   main.scrollTop = y;
 }
 function openPalette() {
-  const s = session, t = setOf(s.set), list = sessionSlides(s);
+  const s = session, t = setFor(s), list = sessionSlides(s);
   openSheet(`<div class="sh-bar"><button class="bar-btn" id="cancel">閉じる</button><h2>問題を選ぶ</h2><span></span></div><div class="palette">${list.map((sl, i) => {
     let c = '', state = '未回答';
     if (slideDone(sl, s.answers)) { c = 'done'; state = '回答ずみ'; }
@@ -522,19 +560,19 @@ function reviewRow(t, q) {
   if (q.items) {
     const scene = t && t.ill && t.ill[q.number - 91];
     title = scene ? scene.stem : 'イラスト問題';
-    body = (scene ? `<p>${esc(scene.stem)}</p><img class="q-img wide" src="${scene.img}" alt="問題${q.number}のイラスト">` : '') + q.items.map((it, j) => {
+    body = (scene && scene.src ? `<p class="ex">${esc(scene.src)}</p>` : '') + (scene ? `<p>${esc(scene.stem)}</p><img class="q-img wide" src="${scene.img}" alt="問題${q.number}のイラスト">` : '') + q.items.map((it, j) => {
       const d = scene && scene.items[j];
       return `<div class="sub-item"><p>問${it.item} ${d ? esc(d.t) : ''}</p><p class="ans">あなた：${it.answer || '未回答'}　正答：${it.correctAnswer}</p>${d ? `<p class="ex">${esc(d.e)}</p>` : ''}</div>`;
     }).join('');
   } else {
     const d = t && t.q[q.number - 1];
     title = d ? d.t : `問題${q.number}`;
-    body = (d ? `<p>${esc(d.t)}</p>` : '') + (d && d.img ? `<img class="q-img" src="${d.img}" alt="問題${q.number}の標識や図">` : '') + `<p class="ans">あなた：${q.answer || '未回答'}　正答：${q.correctAnswer}</p>` + (d ? `<p class="ex">${esc(d.e)}</p>` : '');
+    body = (d && d.src ? `<p class="ex">${esc(d.src)}</p>` : '') + (d ? `<p>${esc(d.t)}</p>` : '') + (d && d.img ? `<img class="q-img" src="${d.img}" alt="問題${q.number}の標識や図">` : '') + `<p class="ans">あなた：${q.answer || '未回答'}　正答：${q.correctAnswer}</p>` + (d ? `<p class="ex">${esc(d.e)}</p>` : '');
   }
   return `<details class="row"><summary><b>${q.number}</b><span>${esc(title)}</span><i class="${label[1]}">${label[0]}</i>${CHEV}</summary><div class="row-body">${body}</div></details>`;
 }
 function renderReview() {
-  const { attempt: a, fresh, saved, timeUp } = view, t = setOf(a.set);
+  const { attempt: a, fresh, saved, timeUp } = view, t = setFor(a);
   barHeader(`<button class="bar-btn" id="backBtn">${BACK}実施状況</button>`, `${a.set} の結果`, `${whenText(a)}・${modeText(a.mode)}`, '');
   $('#backBtn').onclick = () => { view = null; render(); };
   const passed = a.score >= PASS;
@@ -637,7 +675,7 @@ function exportBackup() {
 }
 function checkAttempt(a) {
   const t = a && setOf(a.set);
-  if (!t || !['exam', 'practice'].includes(a.mode) || !Number.isFinite(Date.parse(a.date)) || !Array.isArray(a.questions)) throw Error('読み込めない記録が入っています。');
+  if (!t || !hasSet(a) || !['exam', 'practice'].includes(a.mode) || !Number.isFinite(Date.parse(a.date)) || !Array.isArray(a.questions)) throw Error('読み込めない記録が入っています。');
   if (a.questions.length !== questionCount(t) || !Number.isInteger(a.score) || a.score < 0 || a.score > 100) throw Error('記録の問題数か得点が正しくありません。');
   a.questions.forEach((q, i) => {
     if (!isObj(q) || q.number !== i + 1 || !Number.isInteger(q.points) || ![null, true, false].includes(q.correct)) throw Error('問題ごとの記録が正しくありません。');
@@ -647,7 +685,7 @@ function checkAttempt(a) {
     } else if (!mark(q.answer)) throw Error('問題ごとの記録が正しくありません。');
   });
   if (a.questions.reduce((sum, q) => sum + q.points, 0) !== a.score) throw Error('合計の得点が合いません。');
-  return { id: a.id, date: new Date(a.date).toISOString(), set: t.name, kind: t.kind, mode: a.mode, score: a.score, maxScore: 100, questions: a.questions };
+  return { id: a.id, date: new Date(a.date).toISOString(), set: t.name, kind: t.kind, mode: a.mode, score: a.score, maxScore: 100, questions: a.questions, ...(a.picks ? { picks: a.picks } : {}) };
 }
 $('#restoreFile').onchange = async e => {
   const file = e.target.files && e.target.files[0];
