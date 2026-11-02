@@ -1,5 +1,5 @@
 // 通信がなくても開けるようにするための仕組み
-const CACHE = 'app-4ad1df-743ffe9589';
+const CACHE = 'app-4ad1df-77ab9efad9';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
