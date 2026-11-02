@@ -1,34 +1,26 @@
-const CACHE_NAME = 'gakuka-study-v8';
-const APP_BASE = self.registration.scope;
-const APP_INDEX = new URL('index.html', APP_BASE).href;
-const APP_FILES = [
-  './', 'index.html', 'style.css', 'app.js', 'special-data.js', 'number-data.js', 'answer-explanations.js',
-  'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png',
-  'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png',
-  ...Array.from({length: 4}, (_, i) => Array.from({length: 6}, (_, j) => `signs/tok${i + 1}-${j + 1}.jpg`)).flat(),
-  ...Array.from({length: 5}, (_, i) => [6,14,22,30,42,50,58,66,72,80].map(n => `signs/num${i + 1}-q${n}.jpg`)).flat(),
-  ...Array.from({length: 5}, (_, i) => `explanations/No${i + 1}.jpg`),
-  ...Array.from({length: 4}, (_, i) => `explanations/Toku${i + 1}.jpg`),
-  ...Array.from({length: 5}, (_, i) => Array.from({length: 5}, (_, j) => `No${i + 1}-${91 + j}.jpg`)).flat()
-].map(path => new URL(path, APP_BASE).href);
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
+// 通信がなくても開けるようにするための仕組み
+const CACHE = 'app-4ad1df-743ffe9589';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('gakuka-study-') && key !== CACHE_NAME).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
-  if (event.request.mode === 'navigate') {
-    event.respondWith(fetch(event.request).then(response => {
-      const copy = response.clone();
-      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(APP_INDEX, copy));
-      return response;
-    }).catch(() => caches.match(APP_INDEX)));
+self.addEventListener('fetch', e => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  // ページ本体：通信できれば最新を取り、できなければ保存した分を出す
+  if (req.mode === 'navigate') {
+    e.respondWith(fetch(req.url, { cache: 'no-cache' }).then(res => { const copy = res.clone(); caches.open(CACHE).then(c => c.put('./index.html', copy)); return res; }).catch(() => caches.match('./index.html')));
     return;
   }
-  event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-    if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
-    return response;
-  })));
+  // 文字のデータとアイコン：保存した分を先に使う
+  if (url.origin === location.origin || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
+    e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+      const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res;
+    }).catch(() => Response.error())));
+  }
 });
