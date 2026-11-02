@@ -8,119 +8,196 @@
 <meta name="apple-mobile-web-app-title" content="学科試験">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101214" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>学科試験トレーニング</title>
 <style>
-:root{color-scheme:light dark;--bg:#f2f2f7;--card:#fff;--soft:#f0f1f4;--ink:#17191c;--sub:#666b73;--line:#e0e2e6;--green:#176b50;--green-soft:#e3f3ec;--red:#c2392f;--red-soft:#fdeeec;--on:#fff}
-@media(prefers-color-scheme:dark){:root{--bg:#101214;--card:#1c1e21;--soft:#26292d;--ink:#f3f4f5;--sub:#a9afb6;--line:#363a3f;--green:#70c49b;--green-soft:#1c352a;--red:#ff9288;--red-soft:#3b2524;--on:#0d1f18}}
+/* Apple の Human Interface Guidelines に合わせた色と文字。
+   文字は Dynamic Type に追従する rem で指定する（iOS の本文の既定 17pt＝1rem）。最小は 11pt */
+:root{color-scheme:light dark;
+  --bg:#f2f2f7;--card:#fff;--fill:rgba(118,118,128,.12);--press:rgba(60,60,67,.12);
+  --ink:#000;--sub:#636366;--ter:#aeaeb2;--sep:rgba(60,60,67,.29);
+  --tint:#0058b8;--tint-fill:#0062cc;--tint-soft:rgba(0,98,204,.12);
+  --green:#1f7a35;--green-soft:rgba(36,138,61,.14);--red:#c4001a;--red-soft:rgba(215,0,21,.1);
+  --large:2rem;--title2:1.294rem;--title3:1.176rem;--body:1rem;--sub-t:.882rem;--foot:.765rem;--cap:.706rem}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#000;--card:#1c1c1e;--fill:rgba(118,118,128,.24);--press:rgba(235,235,245,.14);
+  --ink:#fff;--sub:#aeaeb2;--ter:#636366;--sep:rgba(84,84,88,.65);
+  --tint:#409cff;--tint-fill:#0a6cdf;--tint-soft:rgba(64,156,255,.15);
+  --green:#30d158;--green-soft:rgba(48,209,88,.18);--red:#ff6961;--red-soft:rgba(255,69,58,.2)}}
+@media(prefers-contrast:more){:root{--sub:#3a3a3c;--sep:rgba(60,60,67,.5)}}
+@media(prefers-contrast:more) and (prefers-color-scheme:dark){:root{--sub:#d1d1d6;--sep:rgba(235,235,245,.5)}}
 [hidden]{display:none!important}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:17px;font:-apple-system-body;-webkit-text-size-adjust:100%}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none}
-body{display:flex;flex-direction:column;margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
-button{font:inherit;color:inherit;cursor:pointer}
+body{display:flex;flex-direction:column;margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",Meiryo,sans-serif;font-size:var(--body);line-height:1.45}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-user-select:none;user-select:none}
 input{font-size:16px}
 h1,h2,h3,p{margin:0}
-.top{flex:none;padding:0 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
-.top-in{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;padding-top:10px}
-.top h1{font-size:19px;font-weight:750;line-height:1.3}
-.top small{display:block;font-size:12px;color:var(--sub);font-weight:500}
-.top-btn{flex:none;min-height:40px;padding:0 13px;border:1px solid var(--line);border-radius:11px;background:var(--card);font-size:14px;font-weight:700}
-.clock{flex:none;font-size:20px;font-weight:750;font-variant-numeric:tabular-nums}
+svg{display:block;flex:none}
+
+/* 上のバー */
+.top{flex:none;padding:0 16px 8px;background:var(--bg)}
+.top-in{padding-top:10px}
+.top h1{font-size:min(var(--large),40px);font-weight:700;line-height:1.2}
+.top-in .lead{margin-top:2px;font-size:min(var(--foot),16px);color:var(--sub)}
+.large{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.bar{display:grid;grid-template-columns:minmax(max-content,1fr) minmax(0,auto) minmax(max-content,1fr);align-items:center;gap:6px;min-height:44px}
+.bar h1{min-width:0;font-size:min(var(--body),22px);font-weight:600;text-align:center;line-height:1.25}
+.bar h1 small{display:block;font-size:min(var(--cap),15px);font-weight:400;color:var(--sub)}
+.bar>.right{justify-self:end}
+.bar>.left{justify-self:start}
+.bar-btn{white-space:nowrap;display:inline-flex;align-items:center;gap:5px;min-height:44px;min-width:44px;padding:0;border:0;background:none;color:var(--tint);font-size:var(--body)}
+.bar-btn:active{opacity:.5}
+.bar-btn.done{font-weight:600}
+.clock{white-space:nowrap;font-size:min(var(--body),24px);font-weight:600;font-variant-numeric:tabular-nums}
 .clock.low{color:var(--red)}
-main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:14px 16px 24px}
-.tabs{flex:none;display:flex;background:var(--card);border-top:1px solid var(--line)}
-.tab{flex:1;min-height:54px;border:0;background:none;color:var(--sub);font-size:13px;font-weight:700}
-.tab.on{color:var(--green)}
-.tabs.nav{gap:8px;padding-left:12px;padding-right:12px;padding-top:8px}
-.nav button{flex:1;min-height:48px;margin-bottom:8px;border:1px solid var(--line);border-radius:13px;background:var(--soft);font-size:15px;font-weight:700}
-.nav button:disabled{opacity:.4}
-.nav .primary{background:var(--green);border-color:var(--green);color:var(--on)}
-.notice{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding:12px 13px;background:#fff6dd;color:#5d4a0d;border-radius:13px;font-size:14px}
-@media(prefers-color-scheme:dark){.notice{background:#3a3115;color:#f2e2ad}}
-.notice button{flex:none;min-height:38px;padding:0 11px;border:0;border-radius:10px;background:#0000001a;font-size:13px;font-weight:700}
-.resume{width:100%;display:block;margin-bottom:14px;padding:14px;border:2px solid var(--green);border-radius:15px;background:var(--green-soft);text-align:left}
-.resume b{display:block;font-size:16px}
-.resume span{font-size:13px;color:var(--sub)}
-.h{margin:16px 0 8px;font-size:14px;font-weight:750;color:var(--sub)}
-.h:first-child{margin-top:0}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.set{min-height:84px;padding:12px;border:1px solid var(--line);border-radius:15px;background:var(--card);text-align:left}
-.set b{display:block;font-size:18px;line-height:1.3}
-.set small{display:block;font-size:12px;color:var(--sub)}
-.set .best{margin-top:3px;font-weight:700}
-.set .pass{color:var(--green)}
-.seg{display:flex;gap:4px;margin:14px 0;padding:4px;background:var(--soft);border-radius:13px}
-.seg button{flex:1;min-height:44px;border:0;border-radius:10px;background:none;color:var(--sub);font-size:15px;font-weight:700}
-.seg button.on{background:var(--card);color:var(--green)}
-.seg-note{font-size:14px;color:var(--sub);min-height:44px}
-.q-no{font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px}
-.q-text{font-size:17px;line-height:1.7}
-.q-img{display:block;margin:12px auto 0;max-width:100%;max-height:190px;border-radius:10px;background:var(--soft)}
+.has-sep{border-bottom:.5px solid var(--sep)}
+
+/* 中身 */
+main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:8px 16px 28px}
+
+/* 下のタブ：アイコンの下に名前。文字の大きさは固定 */
+.tabs{flex:none;display:flex;background:var(--card);border-top:.5px solid var(--sep)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:50px;padding:5px 0 3px;border:0;background:none;color:var(--sub);font-size:11px;font-weight:500;line-height:1.2}
+.tab.on{color:var(--tint)}
+.tab:active{opacity:.5}
+.tabs.nav{gap:8px;padding:8px 12px 0}
+.nav button{flex:1;min-height:48px;margin-bottom:8px;border:0;border-radius:14px;background:none;color:var(--tint);font-size:var(--body);font-weight:500}
+.nav button:active{opacity:.5}
+.nav button:disabled{color:var(--ter);opacity:1}
+.nav .primary{background:var(--tint-fill);color:#fff;font-weight:600}
+.nav .count{background:var(--fill);color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* 表（iOS の設定画面と同じ、角丸のまとまり） */
+.h{margin:22px 16px 6px;font-size:var(--foot);font-weight:400;color:var(--sub)}
+.h:first-child{margin-top:6px}
+.foot{margin:6px 16px 0;font-size:var(--foot);color:var(--sub)}
+.list{background:var(--card);border-radius:12px;overflow:hidden}
+.row{position:relative;display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:11px 16px;border:0;background:none;text-align:left;font-size:var(--body)}
+button.row:active{background:var(--press)}
+.row+.row::before,details.row+details.row::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--sep)}
+.row .main{flex:1;min-width:0;overflow-wrap:anywhere}
+.row .main small{display:block;margin-top:1px;font-size:var(--foot);color:var(--sub)}
+.row .val{flex:none;color:var(--sub);font-variant-numeric:tabular-nums}
+.row .val.pass{color:var(--green)}
+.row .val b{font-weight:600;color:var(--ink)}
+.chev{width:7px;height:12px;color:var(--ter)}
+.row.action{justify-content:center;color:var(--tint);text-align:center}
+.row.danger{color:var(--red)}
+.row-del{flex:none;min-height:44px;min-width:44px;margin:-8px -8px -8px 0;padding:0 8px;border:0;background:none;color:var(--red);font-size:var(--body)}
+.row-del:active{opacity:.5}
+.row-info{justify-content:space-between}
+.notice{margin-bottom:6px;padding:12px 16px;background:var(--card);border-radius:12px;font-size:var(--sub-t)}
+.notice button{display:block;min-height:44px;margin:0 0 -8px;padding:0;border:0;background:none;color:var(--tint);font-size:var(--body)}
+.notice button:active{opacity:.5}
+
+/* 切り替え */
+.seg{display:flex;gap:2px;padding:2px;background:var(--fill);border-radius:10px}
+.seg button{flex:1;min-height:44px;padding:2px 6px;border:0;border-radius:8px;background:none;font-size:var(--sub-t);font-weight:500}
+.seg button:active{opacity:.6}
+.seg button.on{background:#fff;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.14)}
+@media(prefers-color-scheme:dark){.seg button.on{background:#636366;color:#fff}}
+
+/* 問題 */
+.q-no{font-size:var(--foot);color:var(--sub);margin:4px 0 6px}
+.q-text{font-size:var(--body);line-height:1.6}
+.q-img{display:block;margin:12px auto 0;max-width:100%;max-height:190px;border-radius:10px;background:var(--fill)}
 .q-img.wide{width:100%;max-height:none}
 .marks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-.mark{min-height:68px;border:2px solid var(--line);border-radius:15px;background:var(--card);font-size:30px;font-weight:750;line-height:1}
-.mark span{display:block;margin-top:4px;font-size:12px;font-weight:700;color:var(--sub)}
-.mark.on{border-color:var(--green);background:var(--green-soft);color:var(--green)}
-.mark.on.x{border-color:var(--red);background:var(--red-soft);color:var(--red)}
+.mark{min-height:72px;padding:8px;border:0;border-radius:14px;background:var(--card);font-size:1.765rem;font-weight:500;line-height:1}
+.mark span{display:block;margin-top:5px;font-size:var(--foot);font-weight:500;color:var(--sub)}
+.mark:active{background:var(--press)}
+.mark.on{background:var(--tint-fill);color:#fff}
+.mark.on span{color:#fff}
 .mark:disabled{cursor:default}
-.mark:disabled:not(.on){opacity:.55}
-.item{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.mark:disabled:not(.on){color:var(--ter)}
+.mark:disabled:not(.on) span{color:var(--ter)}
+.item{margin-top:18px;padding-top:14px;border-top:.5px solid var(--sep)}
 .item .marks{margin-top:10px}
-.item .mark{min-height:56px;font-size:24px}
-.fb{margin-top:12px;padding:12px 13px;border-radius:13px;background:var(--green-soft);font-size:15px}
+.item .mark{min-height:60px;font-size:1.412rem}
+.fb{margin-top:12px;padding:12px 16px;border-radius:12px;background:var(--green-soft);font-size:var(--sub-t)}
 .fb.ng{background:var(--red-soft)}
-.fb b{color:var(--green)}
+.fb b{font-weight:600;color:var(--green)}
 .fb.ng b{color:var(--red)}
-.fb p{margin-top:4px;line-height:1.6}
-.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
-.palette button{min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:14px;font-weight:700}
-.palette .done{background:var(--green-soft);color:var(--green);border-color:transparent}
-.palette .ng{background:var(--red-soft);color:var(--red);border-color:transparent}
-.palette .here{outline:2px solid var(--ink);outline-offset:1px}
-.score{padding:18px 16px;background:var(--card);border:1px solid var(--line);border-radius:17px;text-align:center}
-.score b{display:block;font-size:44px;line-height:1.15;font-weight:800}
-.score b small{font-size:17px;font-weight:600;color:var(--sub)}
-.score span{font-size:14px;font-weight:700;color:var(--sub)}
+.fb p{margin-top:4px;line-height:1.55}
+
+/* 問題番号の一覧 */
+.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:6px}
+.palette button{min-height:44px;padding:0;border:0;border-radius:10px;background:var(--card);font-size:var(--sub-t);font-variant-numeric:tabular-nums}
+.palette button:active{opacity:.5}
+.palette .done{background:var(--tint-soft);color:var(--tint)}
+.palette .ng{background:var(--red-soft);color:var(--red)}
+.palette .here{outline:2px solid var(--tint);outline-offset:-2px;font-weight:700}
+
+/* 結果 */
+.score{padding:18px 16px;background:var(--card);border-radius:12px;text-align:center}
+.score b{display:block;font-size:2.588rem;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums}
+.score b small{font-size:var(--body);font-weight:400;color:var(--sub)}
+.score span{font-size:var(--sub-t);font-weight:600;color:var(--sub)}
 .score .good{color:var(--green)}
 .score .bad{color:var(--red)}
-.score p{font-size:13px;color:var(--sub);margin-top:4px}
-.filter{margin:14px 0 10px}
-.row{margin-bottom:7px;border:1px solid var(--line);border-radius:13px;background:var(--card)}
-.row summary{display:flex;align-items:center;gap:9px;min-height:50px;padding:10px 12px;font-size:14px;list-style:none;cursor:pointer}
-.row summary::-webkit-details-marker{display:none}
-.row summary span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row summary i{flex:none;font-style:normal;font-weight:800;font-size:13px}
+.score p{font-size:var(--foot);color:var(--sub);margin-top:4px}
+.filter{margin:16px 0 10px}
+details.row{display:block;padding:0}
+details.row summary{display:flex;align-items:center;gap:9px;min-height:44px;padding:10px 16px;font-size:var(--sub-t);list-style:none;cursor:pointer}
+details.row summary:active{background:var(--press)}
+details.row summary::-webkit-details-marker{display:none}
+details.row summary b{flex:none;min-width:1.5em;font-weight:600;font-variant-numeric:tabular-nums}
+details.row summary span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+details.row summary i{flex:none;font-style:normal;font-weight:600;font-size:var(--foot)}
+details.row[open] .chev{transform:rotate(90deg)}
 .ok{color:var(--green)}.ng{color:var(--red)}.none{color:var(--sub)}
-.row-body{padding:0 12px 12px;font-size:15px}
-.row-body p{margin-top:6px;line-height:1.65}
-.row-body .ans{font-weight:700;font-size:14px}
-.row-body .ex{color:var(--sub);font-size:14px}
-.sub-item{margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
-.attempt{display:flex;align-items:stretch;margin-bottom:8px;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
-.attempt .open{flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:62px;padding:10px 12px;border:0;background:none;text-align:left}
-.attempt b{display:block;font-size:16px}
-.attempt small{display:block;font-size:12px;color:var(--sub)}
-.attempt strong{flex:none;font-size:20px}
-.attempt strong small{display:inline}
-.attempt .del{flex:none;width:58px;border:0;border-left:1px solid var(--line);background:none;color:var(--red);font-size:13px;font-weight:700}
-.empty{padding:26px 16px;text-align:center;color:var(--sub);font-size:15px}
-.btn{display:block;width:100%;min-height:50px;margin-top:10px;padding:0 14px;border:1px solid var(--line);border-radius:13px;background:var(--card);font-size:15px;font-weight:700;text-align:center;line-height:48px}
-.btn.primary{background:var(--green);border-color:var(--green);color:var(--on)}
-.btn.danger{color:var(--red)}
-.btn.danger-fill{background:var(--red);border-color:var(--red);color:#fff}
-@media(prefers-color-scheme:dark){.btn.danger-fill{color:#2a0f0c}}
-.card{padding:14px;background:var(--card);border:1px solid var(--line);border-radius:15px;font-size:14px;color:var(--sub)}
-.card b{color:var(--ink)}
-#sheetWrap{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:#0007}
-#sheet{max-height:85%;overflow-y:auto;overscroll-behavior:contain;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0px));background:var(--bg);border-radius:20px 20px 0 0}
-#sheet h2{font-size:19px;line-height:1.35;margin-bottom:6px}
-#sheet p{font-size:15px;color:var(--sub)}
-#toast{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 74px);z-index:30;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:7px 8px 7px 14px;background:#24272bf5;color:#fff;border-radius:13px;font-size:14px}
-#toast button{flex:none;min-height:38px;padding:0 12px;border:0;border-radius:10px;background:#fff2;color:#fff;font-weight:700;font-size:14px}
+.row-body{padding:0 16px 12px;font-size:var(--sub-t)}
+.row-body p{margin-top:6px;line-height:1.55}
+.row-body .ans{font-weight:600}
+.row-body .ex{color:var(--sub)}
+.sub-item{margin-top:10px;padding-top:9px;border-top:.5px solid var(--sep)}
+.empty{padding:60px 24px;text-align:center}
+.empty b{display:block;font-size:var(--title3);font-weight:700;margin-bottom:6px}
+.empty span{color:var(--sub);font-size:var(--sub-t)}
+.mt{margin-top:22px}
+
+/* ボタン */
+.btn{display:block;width:100%;min-height:50px;margin-top:14px;padding:8px 14px;border:0;border-radius:14px;background:var(--tint-fill);color:#fff;font-size:var(--body);font-weight:600;text-align:center}
+.btn:active{opacity:.7}
+
+/* シート */
+#sheetWrap{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,.35)}
+#sheet{max-height:88%;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));background:var(--bg);border-radius:14px 14px 0 0;animation:rise .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes rise{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){#sheet{animation:none}}
+@media(prefers-color-scheme:dark){#sheet{--card:#2c2c2e;background:#1c1c1e}#sheet.action{--card:#2c2c2e;background:transparent}}
+.sh-bar{display:grid;grid-template-columns:minmax(max-content,1fr) minmax(0,auto) minmax(0,1fr);align-items:center;gap:6px;min-height:44px;margin-bottom:8px}
+.sh-bar h2{font-size:var(--body);font-weight:600;text-align:center}
+.sh-bar>:first-child{justify-self:start}
+.sh-info{margin:0 16px;color:var(--sub);font-size:var(--sub-t)}
+.sh-note{margin:8px 16px 0;color:var(--sub);font-size:var(--foot)}
+.sh-warn{margin:8px 16px 0;color:var(--red);font-size:var(--foot)}
+#sheet .seg{margin-top:14px}
+
+/* 確認（アクションシート）。取り消しは下に離す */
+#sheet.action{padding:0 8px calc(8px + env(safe-area-inset-bottom,0px));background:transparent;border-radius:0}
+.as-group{background:var(--card);border-radius:14px;overflow:hidden}
+.as-group+.as-group{margin-top:8px}
+.as-title{padding:14px 16px;text-align:center;font-size:var(--foot);color:var(--sub);border-bottom:.5px solid var(--sep)}
+.as-title b{display:block;font-weight:600}
+.as-title span{display:block;margin-top:3px}
+.as-btn{display:block;width:100%;min-height:56px;padding:8px 14px;border:0;background:none;color:var(--tint);font-size:var(--title3)}
+.as-btn+.as-btn{border-top:.5px solid var(--sep)}
+.as-btn:active{background:var(--press)}
+.as-btn.danger{color:var(--red)}
+.as-btn.cancel{font-weight:600}
+
+/* 知らせ（元に戻すを含む） */
+#toast{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 70px);z-index:30;display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:2px 12px 2px 16px;background:rgba(44,44,46,.96);color:#fff;border-radius:14px;font-size:var(--sub-t);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#toast button{flex:none;min-height:44px;padding:0 4px;border:0;background:none;color:#64aaff;font-weight:600;font-size:var(--sub-t)}
+#toast button:active{opacity:.5}
+button:focus-visible,summary:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
 </style>
 <style>
 html{position:fixed;top:0;right:0;bottom:0;left:0;height:auto;padding:0;overflow:hidden}
@@ -229,14 +306,36 @@ let tab = 'home', session = load(SESSION_KEY, null), tick = null, view = null, r
 if (session && (!setOf(session.set) || !session.answers)) { session = null; drop(SESSION_KEY); }
 const saveSession = () => save(SESSION_KEY, session);
 
+/* ---------- アイコン（塗りの形） ---------- */
+const svg = (inner, size = 25) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="currentColor" aria-hidden="true">${inner}</svg>`;
+const ICONS = {
+  home: svg('<path fill-rule="evenodd" d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7.5 1.8V8.5h4.7zM7.5 12v1.7h9V12zm0 4v1.7h9V16z"/>'),
+  history: svg('<rect x="3.5" y="13" width="4.6" height="8.5" rx="1.2"/><rect x="9.7" y="8" width="4.6" height="13.5" rx="1.2"/><rect x="15.9" y="2.5" width="4.6" height="19" rx="1.2"/>'),
+  settings: svg(Array.from({ length: 8 }, (_, i) => `<rect x="10.3" y="1.5" width="3.4" height="5" rx="1" transform="rotate(${i * 45} 12 12)"/>`).join('') + '<path fill-rule="evenodd" d="M12 4.6a7.4 7.4 0 1 0 0 14.8a7.4 7.4 0 0 0 0-14.8zm0 4.2a3.2 3.2 0 1 1 0 6.4a3.2 3.2 0 0 1 0-6.4z"/>'),
+};
+const CHEV = '<svg class="chev" viewBox="0 0 8 14" aria-hidden="true"><path d="M1.2 1.2 7 7l-5.8 5.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const BACK = '<svg viewBox="0 0 10 18" width="10" height="18" aria-hidden="true"><path d="M8.5 1.5 1.5 9l7 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHECK = '✓', CROSS = '✕';
+
+let editing = false;
+
 function bottomTabs() {
   tabs.className = 'tabs';
   tabs.innerHTML = [['home', '問題'], ['history', '実施状況'], ['settings', '設定']].map(([k, label]) =>
-    `<button class="tab ${tab === k ? 'on' : ''}" data-tab="${k}">${label}</button>`).join('');
-  tabs.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; view = null; render(); });
+    `<button class="tab ${tab === k ? 'on' : ''}" data-tab="${k}" ${tab === k ? 'aria-current="page"' : ''}>${ICONS[k]}<span>${label}</span></button>`).join('');
+  tabs.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { tab = b.dataset.tab; view = null; editing = false; render(); });
 }
-function header(title, sub, right = '') {
-  topIn.innerHTML = `<h1>${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ''}</h1>${right}`;
+// タブの一番上の画面は大きな題名
+function largeHeader(title, lead = '', right = '') {
+  document.querySelector('.top').classList.remove('has-sep');
+  topIn.className = 'top-in';
+  topIn.innerHTML = `<div class="large"><h1>${esc(title)}</h1>${right}</div>${lead ? `<p class="lead">${esc(lead)}</p>` : ''}`;
+}
+// 問題を解く画面や結果の画面は、左・中央・右の小さなバー
+function barHeader(left, title, sub, right) {
+  document.querySelector('.top').classList.add('has-sep');
+  topIn.className = 'top-in bar';
+  topIn.innerHTML = `<div class="left">${left}</div><h1>${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ''}</h1><div class="right">${right}</div>`;
 }
 function render() {
   clearInterval(tick);
@@ -249,6 +348,8 @@ function render() {
   else renderSettings();
   main.scrollTop = 0;
 }
+const whenText = a => new Date(a.date).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
+const modeText = m => (m === 'exam' ? '試験' : '練習');
 
 /* ---------- 問題タブ ---------- */
 function fmtClock(sec) { sec = Math.max(0, sec); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
@@ -257,25 +358,25 @@ function setStats(name) {
   const all = readHistory().filter(a => a.set === name), exams = all.filter(a => a.mode === 'exam');
   return { count: all.length, best: exams.length ? Math.max(...exams.map(a => a.score)) : null };
 }
-function setCard(t) {
+function setRow(t) {
   const st = setStats(t.name);
-  const line = st.best !== null ? `<small class="best ${st.best >= PASS ? 'pass' : ''}">最高 ${st.best}点・${st.count}回</small>` : st.count ? `<small class="best">練習 ${st.count}回</small>` : '<small class="best">まだやっていません</small>';
-  return `<button class="set" data-set="${t.name}"><b>${t.name}</b><small>${questionCount(t)}問・${t.minutes}分</small>${line}</button>`;
+  const val = st.best !== null ? `<span class="val ${st.best >= PASS ? 'pass' : ''}">${st.best >= PASS ? CHECK + ' ' : ''}最高 ${st.best}点</span>` : st.count ? `<span class="val">練習 ${st.count}回</span>` : '';
+  return `<button class="row" data-set="${t.name}"><span class="main">${t.name}<small>${questionCount(t)}問・${t.minutes}分</small></span>${val}${CHEV}</button>`;
 }
 function backupNotice() {
   const count = readHistory().length, last = load(BACKUP_KEY, null);
   if (!count || (last && Date.now() - Date.parse(last) < 30 * 864e5)) return '';
-  return `<div class="notice"><span>${last ? '前のバックアップから30日たちました。' : 'バックアップがまだありません。'}</span><button id="goBackup">保存する</button></div>`;
+  return `<div class="notice">${last ? '前のバックアップから30日たちました。' : 'バックアップがまだありません。'}<button id="goBackup">バックアップを保存</button></div>`;
 }
 function renderHome() {
-  header('学科試験トレーニング', '兵庫・明石の仮免許と本免許');
+  largeHeader('学科試験トレーニング', '兵庫・明石の仮免許と本免許');
   let resume = '';
   if (session) {
     const left = session.mode === 'exam' ? `残り ${fmtClock(remaining(session))}` : '練習';
-    resume = `<button class="resume" id="resume"><b>${session.set} の続きから</b><span>${left}・${answeredCount(session)} / ${questionCount(setOf(session.set))} 問に回答ずみ</span></button>`;
+    resume = `<h2 class="h">途中の問題</h2><div class="list"><button class="row" id="resume"><span class="main">${session.set} の続きから<small>${left}・${answeredCount(session)} / ${questionCount(setOf(session.set))} 問に回答ずみ</small></span>${CHEV}</button></div>`;
   }
-  const group = kind => SETS.filter(t => t.kind === kind).map(setCard).join('');
-  main.innerHTML = backupNotice() + resume + `<h2 class="h">仮免許</h2><div class="grid">${group('仮免許')}</div><h2 class="h">本免許</h2><div class="grid">${group('本免許')}</div>`;
+  const group = kind => SETS.filter(t => t.kind === kind).map(setRow).join('');
+  main.innerHTML = backupNotice() + resume + `<h2 class="h">仮免許</h2><div class="list">${group('仮免許')}</div><h2 class="h">本免許</h2><div class="list">${group('本免許')}</div>`;
   if ($('#resume')) $('#resume').onclick = () => { view = { type: 'exam' }; render(); };
   if ($('#goBackup')) $('#goBackup').onclick = exportBackup;
   main.querySelectorAll('[data-set]').forEach(b => b.onclick = () => openStart(b.dataset.set));
@@ -284,12 +385,13 @@ function answeredCount(s) { return slides(setOf(s.set)).filter(sl => slideDone(s
 
 function openStart(name, mode = 'exam') {
   const t = setOf(name);
-  const note = mode === 'exam' ? `時間を計ります。${t.minutes}分たつと自動で採点します。正解と解説は終わってから見られます。` : '時間は計りません。答えるたびに正解と解説が出ます。';
-  const warn = session ? `<p style="color:var(--red);margin-top:8px">途中の ${session.set} は消えます。</p>` : '';
-  openSheet(`<h2>${t.kind} ${t.name}</h2><p>${questionCount(t)}問・${t.minutes}分・${PASS}点以上で合格</p>
-    <div class="seg"><button data-m="exam" class="${mode === 'exam' ? 'on' : ''}">試験モード</button><button data-m="practice" class="${mode === 'practice' ? 'on' : ''}">練習モード</button></div>
-    <p class="seg-note">${note}</p>${warn}
-    <button class="btn primary" id="go">始める</button><button class="btn" id="cancel">やめる</button>`);
+  const note = mode === 'exam' ? `時間を計ります。${t.minutes}分たつと自動で採点し、正解と解説は終わってから見られます。` : '時間は計りません。答えるたびに正解と解説が出ます。';
+  const warn = session ? `<p class="sh-warn">始めると、途中の ${session.set} は消えます。</p>` : '';
+  openSheet(`<div class="sh-bar"><button class="bar-btn" id="cancel">キャンセル</button><h2>${t.kind} ${t.name}</h2><span></span></div>
+    <p class="sh-info">${questionCount(t)}問・${t.minutes}分・${PASS}点以上で合格</p>
+    <div class="seg" role="group" aria-label="モード"><button data-m="exam" class="${mode === 'exam' ? 'on' : ''}" aria-pressed="${mode === 'exam'}">試験モード</button><button data-m="practice" class="${mode === 'practice' ? 'on' : ''}" aria-pressed="${mode === 'practice'}">練習モード</button></div>
+    <p class="sh-note">${note}</p>${warn}
+    <button class="btn" id="go">始める</button>`);
   $('#sheet').querySelectorAll('[data-m]').forEach(b => b.onclick = () => openStart(name, b.dataset.m));
   $('#cancel').onclick = closeSheet;
   $('#go').onclick = () => {
@@ -305,12 +407,12 @@ function markButtons(key, locked) {
   const v = session.answers[key];
   return `<div class="marks">
     <button class="mark ${v === '○' ? 'on' : ''}" data-k="${key}" data-v="○" ${locked ? 'disabled' : ''} aria-pressed="${v === '○'}">○<span>正しい</span></button>
-    <button class="mark x ${v === '×' ? 'on' : ''}" data-k="${key}" data-v="×" ${locked ? 'disabled' : ''} aria-pressed="${v === '×'}">×<span>誤り</span></button></div>`;
+    <button class="mark ${v === '×' ? 'on' : ''}" data-k="${key}" data-v="×" ${locked ? 'disabled' : ''} aria-pressed="${v === '×'}">×<span>誤り</span></button></div>`;
 }
 function feedback(t, key, explanation) {
   if (session.mode !== 'practice' || !session.answers[key]) return '';
   const right = expected(t, key), ok = session.answers[key] === right;
-  return `<div class="fb ${ok ? '' : 'ng'}"><b>${ok ? '正解' : '不正解'}</b>・正答は ${right}<p>${esc(explanation)}</p></div>`;
+  return `<div class="fb ${ok ? '' : 'ng'}"><b>${ok ? CHECK + ' 正解' : CROSS + ' 不正解'}</b>・正答は ${right}<p>${esc(explanation)}</p></div>`;
 }
 function renderExam() {
   const s = session;
@@ -320,8 +422,8 @@ function renderExam() {
   const list = slides(t);
   s.index = Math.max(0, Math.min(s.index, list.length - 1));
   const sl = list[s.index];
-  const clock = s.mode === 'exam' ? `<span class="clock" id="clock">${fmtClock(remaining(s))}</span>` : '';
-  header(`${t.name}・${s.mode === 'exam' ? '試験' : '練習'}`, `${answeredCount(s)} / ${list.length} 問に回答`, `${clock}<button class="top-btn" id="endBtn">終わる</button>`);
+  const clock = s.mode === 'exam' ? `<span class="clock" id="clock" role="timer" aria-label="残り時間">${fmtClock(remaining(s))}</span>` : '';
+  barHeader('<button class="bar-btn" id="endBtn">終わる</button>', `${t.name}・${modeText(s.mode)}`, `${answeredCount(s)} / ${list.length} 問に回答`, clock);
   $('#endBtn').onclick = openEnd;
   if (s.mode === 'exam') {
     const update = () => {
@@ -333,18 +435,18 @@ function renderExam() {
     tick = setInterval(update, 1000);
   }
   if (sl.q) {
-    main.innerHTML = `<div class="q-no">問題 ${sl.number} / ${t.q.length + (t.ill ? t.ill.length : 0)}</div><p class="q-text">${esc(sl.q.t)}</p>
+    main.innerHTML = `<div class="q-no">問題 ${sl.number} / ${list.length}</div><p class="q-text">${esc(sl.q.t)}</p>
       ${sl.q.img ? `<img class="q-img" src="${sl.q.img}" alt="問題${sl.number}の標識や図">` : ''}
       ${markButtons(sl.keys[0], s.mode === 'practice' && !!s.answers[sl.keys[0]])}${feedback(t, sl.keys[0], sl.q.e)}`;
   } else {
     main.innerHTML = `<div class="q-no">イラスト問題 ${sl.number}（3つとも正解で2点）</div><p class="q-text">${esc(sl.scene.stem)}</p>
       <img class="q-img wide" src="${sl.scene.img}" alt="問題${sl.number}のイラスト">
-      ${sl.scene.items.map((it, j) => `<div class="item"><p class="q-text" style="font-size:16px"><b>問${j + 1}</b> ${esc(it.t)}</p>${markButtons(sl.keys[j], s.mode === 'practice' && !!s.answers[sl.keys[j]])}${feedback(t, sl.keys[j], it.e)}</div>`).join('')}`;
+      ${sl.scene.items.map((it, j) => `<div class="item"><p class="q-text"><b>問${j + 1}</b> ${esc(it.t)}</p>${markButtons(sl.keys[j], s.mode === 'practice' && !!s.answers[sl.keys[j]])}${feedback(t, sl.keys[j], it.e)}</div>`).join('')}`;
   }
   main.querySelectorAll('.mark').forEach(b => b.onclick = () => answer(b.dataset.k, b.dataset.v));
   tabs.className = 'tabs nav';
   const last = s.index === list.length - 1;
-  tabs.innerHTML = `<button id="prev" ${s.index ? '' : 'disabled'}>前へ</button><button id="pal">${sl.number} / ${list.length}</button><button id="next" class="primary">${last ? '終わる' : '次へ'}</button>`;
+  tabs.innerHTML = `<button id="prev" ${s.index ? '' : 'disabled'}>前へ</button><button id="pal" class="count" aria-label="問題番号の一覧を開く">${sl.number} / ${list.length}</button><button id="next" class="primary">${last ? '終わる' : '次へ'}</button>`;
   $('#prev').onclick = () => go(s.index - 1);
   $('#next').onclick = () => last ? openEnd() : go(s.index + 1);
   $('#pal').onclick = openPalette;
@@ -362,26 +464,22 @@ function answer(key, value) {
 }
 function openPalette() {
   const s = session, t = setOf(s.set), list = slides(t);
-  openSheet(`<h2>問題を選ぶ</h2><div class="palette" style="margin:10px 0 6px">${list.map((sl, i) => {
-    let c = '';
-    if (slideDone(sl, s.answers)) c = 'done';
-    if (s.mode === 'practice' && sl.keys.some(k => s.answers[k] && s.answers[k] !== expected(t, k))) c = 'ng';
-    return `<button class="${c} ${i === s.index ? 'here' : ''}" data-i="${i}">${sl.number}</button>`;
-  }).join('')}</div><button class="btn" id="cancel">閉じる</button>`);
+  openSheet(`<div class="sh-bar"><button class="bar-btn" id="cancel">閉じる</button><h2>問題を選ぶ</h2><span></span></div><div class="palette">${list.map((sl, i) => {
+    let c = '', state = '未回答';
+    if (slideDone(sl, s.answers)) { c = 'done'; state = '回答ずみ'; }
+    if (s.mode === 'practice' && sl.keys.some(k => s.answers[k] && s.answers[k] !== expected(t, k))) { c = 'ng'; state = '不正解'; }
+    return `<button class="${c} ${i === s.index ? 'here' : ''}" data-i="${i}" aria-label="問題${sl.number} ${state}">${sl.number}</button>`;
+  }).join('')}</div>`);
   $('#sheet').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { closeSheet(); go(+b.dataset.i); });
   $('#cancel').onclick = closeSheet;
 }
 function openEnd() {
-  const s = session, total = questionCount(setOf(s.set)), rest = total - answeredCount(s);
-  openSheet(`<h2>${s.set} を終わりますか</h2><p>${rest ? `まだ ${rest} 問 答えていません。答えていない問題は0点です。` : 'すべて答えました。'}</p>
-    <button class="btn primary" id="doFinish">採点する</button>
-    <button class="btn" id="later">あとで続ける</button>
-    <button class="btn danger" id="discard">記録せずにやめる</button>
-    <button class="btn" id="cancel">問題に戻る</button>`);
-  $('#doFinish').onclick = () => finish(false);
-  $('#later').onclick = () => { view = null; tab = 'home'; render(); };
-  $('#discard').onclick = () => { session = null; drop(SESSION_KEY); view = null; tab = 'home'; render(); };
-  $('#cancel').onclick = closeSheet;
+  const s = session, rest = questionCount(setOf(s.set)) - answeredCount(s);
+  actionSheet(`${s.set} を終わりますか`, rest ? `まだ ${rest} 問 答えていません。答えていない問題は0点です。` : '',
+    [{ label: '記録せずにやめる', danger: true, run: () => { session = null; drop(SESSION_KEY); view = null; tab = 'home'; render(); } },
+     { label: '採点する', run: () => finish(false) },
+     { label: 'あとで続ける', run: () => { view = null; tab = 'home'; render(); } }],
+    '問題に戻る');
 }
 function finish(timeUp) {
   clearInterval(tick);
@@ -401,92 +499,93 @@ function finish(timeUp) {
 
 /* ---------- 結果と見直し ---------- */
 function reviewRow(t, q) {
-  const label = q.correct === true ? ['正解', 'ok'] : q.correct === false ? ['不正解', 'ng'] : ['未回答', 'none'];
+  const label = q.correct === true ? [CHECK + ' 正解', 'ok'] : q.correct === false ? [CROSS + ' 不正解', 'ng'] : ['未回答', 'none'];
   let title = '', body = '';
   if (q.items) {
     const scene = t && t.ill && t.ill[q.number - 91];
     title = scene ? scene.stem : 'イラスト問題';
-    body = (scene ? `<img class="q-img wide" src="${scene.img}" alt="">` : '') + q.items.map((it, j) => {
+    body = (scene ? `<p>${esc(scene.stem)}</p><img class="q-img wide" src="${scene.img}" alt="問題${q.number}のイラスト">` : '') + q.items.map((it, j) => {
       const d = scene && scene.items[j];
       return `<div class="sub-item"><p>問${it.item} ${d ? esc(d.t) : ''}</p><p class="ans">あなた：${it.answer || '未回答'}　正答：${it.correctAnswer}</p>${d ? `<p class="ex">${esc(d.e)}</p>` : ''}</div>`;
     }).join('');
   } else {
     const d = t && t.q[q.number - 1];
     title = d ? d.t : `問題${q.number}`;
-    body = (d ? `<p>${esc(d.t)}</p>` : '') + (d && d.img ? `<img class="q-img" src="${d.img}" alt="">` : '') + `<p class="ans">あなた：${q.answer || '未回答'}　正答：${q.correctAnswer}</p>` + (d ? `<p class="ex">${esc(d.e)}</p>` : '');
+    body = (d ? `<p>${esc(d.t)}</p>` : '') + (d && d.img ? `<img class="q-img" src="${d.img}" alt="問題${q.number}の標識や図">` : '') + `<p class="ans">あなた：${q.answer || '未回答'}　正答：${q.correctAnswer}</p>` + (d ? `<p class="ex">${esc(d.e)}</p>` : '');
   }
-  return `<details class="row"><summary><b>${q.number}</b><span>${esc(title)}</span><i class="${label[1]}">${label[0]}</i></summary><div class="row-body">${body}</div></details>`;
+  return `<details class="row"><summary><b>${q.number}</b><span>${esc(title)}</span><i class="${label[1]}">${label[0]}</i>${CHEV}</summary><div class="row-body">${body}</div></details>`;
 }
 function renderReview() {
   const { attempt: a, fresh, saved, timeUp } = view, t = setOf(a.set);
-  const when = new Date(a.date).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
-  header(`${a.set} の結果`, `${when}・${a.mode === 'exam' ? '試験' : '練習'}`, '<button class="top-btn" id="backBtn">閉じる</button>');
+  barHeader(`<button class="bar-btn" id="backBtn">${BACK}実施状況</button>`, `${a.set} の結果`, `${whenText(a)}・${modeText(a.mode)}`, '');
   $('#backBtn').onclick = () => { view = null; render(); };
   const passed = a.score >= PASS;
-  const verdict = a.mode === 'exam' ? (passed ? '<span class="good">合格ライン到達</span>' : `<span class="bad">合格まであと ${PASS - a.score} 点</span>`) : '<span>練習の結果</span>';
+  const verdict = a.mode === 'exam' ? (passed ? `<span class="good">${CHECK} 合格ライン到達</span>` : `<span class="bad">合格まであと ${PASS - a.score} 点</span>`) : '<span>練習の結果</span>';
   const wrong = a.questions.filter(q => q.correct !== true);
   const shown = reviewFilter === 'wrong' ? wrong : a.questions;
   main.innerHTML = `<div class="score"><b>${a.score}<small> / ${a.maxScore}点</small></b>${verdict}
       ${timeUp ? '<p>時間切れで採点しました。</p>' : ''}${fresh && !saved ? '<p class="bad">この端末に保存できませんでした。</p>' : ''}</div>
-    <div class="seg filter"><button data-f="wrong" class="${reviewFilter === 'wrong' ? 'on' : ''}">間違い・未回答 ${wrong.length}</button><button data-f="all" class="${reviewFilter === 'all' ? 'on' : ''}">すべて ${a.questions.length}</button></div>
-    ${shown.length ? shown.map(q => reviewRow(t, q)).join('') : '<p class="empty">全問正解です。</p>'}
-    <button class="btn danger" id="delThis">この記録を消す</button>`;
+    <div class="seg filter" role="group" aria-label="表示する問題"><button data-f="wrong" class="${reviewFilter === 'wrong' ? 'on' : ''}" aria-pressed="${reviewFilter === 'wrong'}">間違い・未回答 ${wrong.length}</button><button data-f="all" class="${reviewFilter === 'all' ? 'on' : ''}" aria-pressed="${reviewFilter === 'all'}">すべて ${a.questions.length}</button></div>
+    ${shown.length ? `<div class="list">${shown.map(q => reviewRow(t, q)).join('')}</div>` : '<div class="empty"><b>全問正解です</b></div>'}
+    <div class="list mt"><button class="row action danger" id="delThis">この記録を削除</button></div>`;
   main.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { const y = main.scrollTop; reviewFilter = b.dataset.f; render(); main.scrollTop = y; });
-  $('#delThis').onclick = () => confirmDelete(a);
+  $('#delThis').onclick = () => deleteAttempt(a);
   main.scrollTop = 0;
 }
 
 /* ---------- 実施状況 ---------- */
 function renderHistory() {
   const history = readHistory();
-  header('実施状況', history.length ? `${history.length} 件の記録` : '');
-  if (!history.length) { main.innerHTML = '<p class="empty">まだ記録がありません。試験か練習を終えると、ここに残ります。</p>'; return; }
-  main.innerHTML = history.map((a, i) => {
-    const when = new Date(a.date).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
-    const cls = a.mode === 'exam' ? (a.score >= PASS ? 'ok' : 'ng') : '';
-    return `<div class="attempt"><button class="open" data-i="${i}"><span><b>${esc(a.set)}・${a.mode === 'exam' ? '試験' : '練習'}</b><small>${when}</small></span><strong class="${cls}">${a.score}<small> 点</small></strong></button><button class="del" data-del="${i}" aria-label="${esc(a.set)} ${when} の記録を消す">消す</button></div>`;
-  }).join('') + '<button class="btn danger" id="delAll">すべて消す</button>';
+  if (!history.length) editing = false;
+  const edit = history.length ? `<button class="bar-btn ${editing ? 'done' : ''}" id="editBtn">${editing ? '完了' : '編集'}</button>` : '';
+  largeHeader('実施状況', history.length ? `${history.length} 件の記録` : '', edit);
+  if ($('#editBtn')) $('#editBtn').onclick = () => { const y = main.scrollTop; editing = !editing; renderHistory(); main.scrollTop = y; };
+  if (!history.length) { main.innerHTML = '<div class="empty"><b>記録はありません</b><span>試験か練習を終えると、ここに残ります。</span></div>'; return; }
+  const rows = history.map((a, i) => {
+    const verdict = a.mode === 'exam' ? (a.score >= PASS ? '・合格' : '・不合格') : '';
+    const inner = `<span class="main">${esc(a.set)}・${modeText(a.mode)}<small>${whenText(a)}${verdict}</small></span><span class="val"><b>${a.score}</b> 点</span>`;
+    return editing
+      ? `<div class="row">${inner}<button class="row-del" data-del="${i}" aria-label="${esc(a.set)} ${whenText(a)} の記録を削除">削除</button></div>`
+      : `<button class="row" data-i="${i}">${inner}${CHEV}</button>`;
+  }).join('');
+  main.innerHTML = `<div class="list">${rows}</div>` + (editing ? '<div class="list mt"><button class="row action danger" id="delAll">すべて削除</button></div>' : '');
   main.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { reviewFilter = 'wrong'; view = { type: 'review', attempt: history[+b.dataset.i] }; render(); });
-  main.querySelectorAll('[data-del]').forEach(b => b.onclick = () => confirmDelete(history[+b.dataset.del]));
-  $('#delAll').onclick = confirmDeleteAll;
+  main.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteAttempt(history[+b.dataset.del]));
+  if ($('#delAll')) $('#delAll').onclick = confirmDeleteAll;
 }
 const sameAttempt = (a, b) => a.id === b.id && a.date === b.date && a.set === b.set;
-function confirmDelete(a) {
-  const when = new Date(a.date).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
-  openSheet(`<h2>この記録を消しますか</h2><p>${esc(a.set)}・${a.mode === 'exam' ? '試験' : '練習'}・${a.score}点<br>${when}</p>
-    <button class="btn danger-fill" id="yes">消す</button><button class="btn" id="cancel">やめる</button>`);
-  $('#cancel').onclick = closeSheet;
-  $('#yes').onclick = () => {
-    const before = readHistory(), i = before.findIndex(x => sameAttempt(x, a));
-    if (i < 0) { view = null; render(); return; }
-    const after = before.slice(); after.splice(i, 1);
-    if (!writeHistory(after)) { closeSheet(); toast('消せませんでした。もう一度試してください。'); return; }
-    view = null; tab = 'history'; render();
-    toast('記録を消しました。', () => { const now = readHistory(); now.push(a); now.sort((x, y) => Date.parse(y.date) - Date.parse(x.date)); writeHistory(now); view = null; tab = 'history'; render(); });
-  };
+const byNewest = (x, y) => Date.parse(y.date) - Date.parse(x.date);
+// 1件の削除は元に戻せるので、確認を挟まずに消す
+function deleteAttempt(a) {
+  const before = readHistory(), i = before.findIndex(x => sameAttempt(x, a));
+  if (i < 0) { view = null; render(); return; }
+  const after = before.slice(); after.splice(i, 1);
+  if (!writeHistory(after)) { toast('削除できませんでした。もう一度試してください。'); return; }
+  view = null; tab = 'history'; render();
+  toast('記録を削除しました。', () => { const now = readHistory(); now.push(a); now.sort(byNewest); writeHistory(now); view = null; tab = 'history'; render(); });
 }
 function confirmDeleteAll() {
   const before = readHistory();
-  if (!before.length) { toast('消す記録がありません。'); return; }
-  openSheet(`<h2>${before.length} 件の記録をすべて消しますか</h2><p>各セットの最高点も消えます。残したいときは、先に設定の画面でバックアップを保存してください。</p>
-    <button class="btn danger-fill" id="yes">すべて消す</button><button class="btn" id="cancel">やめる</button>`);
-  $('#cancel').onclick = closeSheet;
-  $('#yes').onclick = () => {
-    if (!writeHistory([])) { closeSheet(); toast('消せませんでした。もう一度試してください。'); return; }
-    view = null; render();
-    toast('すべて消しました。', () => { const merged = readHistory().concat(before).sort((x, y) => Date.parse(y.date) - Date.parse(x.date)); writeHistory(merged); view = null; render(); });
-  };
+  if (!before.length) { toast('削除する記録はありません。'); return; }
+  actionSheet(`${before.length} 件の記録をすべて削除しますか`, '各セットの最高点も消えます。',
+    [{ label: 'すべて削除', danger: true, run: () => {
+      if (!writeHistory([])) { closeSheet(); toast('削除できませんでした。もう一度試してください。'); return; }
+      view = null; editing = false; render();
+      toast('すべて削除しました。', () => { writeHistory(readHistory().concat(before).sort(byNewest)); view = null; render(); });
+    } }], 'キャンセル');
 }
 
 /* ---------- 設定とバックアップ ---------- */
 function renderSettings() {
-  header('設定');
+  largeHeader('設定');
   const count = readHistory().length, last = load(BACKUP_KEY, null);
-  main.innerHTML = `<div class="card"><b>記録はこの iPhone の中だけにあります。</b><br>ほかの端末とは同期しません。ホーム画面のアイコンを消すと、記録も消えます。</div>
-    <h2 class="h">バックアップ</h2><div class="card">記録 ${count} 件・最後の保存 ${last ? new Date(last).toLocaleDateString('ja-JP') : 'まだありません'}</div>
-    <button class="btn primary" id="backup">バックアップを保存</button>
-    <button class="btn" id="restore">バックアップから戻す</button>
-    <h2 class="h">実施状況</h2><button class="btn danger" id="delAll">実施状況をすべて消す</button>`;
+  main.innerHTML = `<h2 class="h">バックアップ</h2><div class="list">
+      <div class="row row-info"><span>記録</span><span class="val">${count} 件</span></div>
+      <div class="row row-info"><span>最後の保存</span><span class="val">${last ? new Date(last).toLocaleDateString('ja-JP') : 'なし'}</span></div>
+      <button class="row action" id="backup">バックアップを保存</button>
+      <button class="row action" id="restore">バックアップから戻す</button></div>
+    <p class="foot">記録はこの iPhone の中だけにあります。ほかの端末とは同期しません。ホーム画面のアイコンを消すと、記録も消えます。</p>
+    <h2 class="h">実施状況</h2><div class="list"><button class="row action danger" id="delAll">実施状況をすべて削除</button></div>`;
   $('#backup').onclick = exportBackup;
   $('#restore').onclick = () => $('#restoreFile').click();
   $('#delAll').onclick = confirmDeleteAll;
@@ -540,14 +639,21 @@ $('#restoreFile').onchange = async e => {
 };
 
 /* ---------- シートと知らせ ---------- */
-function openSheet(html) {
+function openSheet(html, cls = '') {
   const wrap = $('#sheetWrap'), sheet = $('#sheet');
-  sheet.onclick = null;
+  sheet.className = cls;
   sheet.innerHTML = html;
   wrap.hidden = false;
   wrap.onclick = e => { if (e.target === wrap) closeSheet(); };
 }
 function closeSheet() { $('#sheetWrap').hidden = true; $('#sheet').innerHTML = ''; }
+// 確認の選択肢。削除など取り返しのつかないものは赤で上に置き、取り消しは下に離す
+function actionSheet(title, message, actions, cancelLabel) {
+  openSheet(`<div class="as-group"><div class="as-title"><b>${esc(title)}</b>${message ? `<span>${esc(message)}</span>` : ''}</div>${actions.map((x, i) => `<button class="as-btn ${x.danger ? 'danger' : ''}" data-a="${i}">${esc(x.label)}</button>`).join('')}</div>
+    <div class="as-group"><button class="as-btn cancel" id="cancel">${esc(cancelLabel)}</button></div>`, 'action');
+  $('#sheet').querySelectorAll('[data-a]').forEach(b => b.onclick = () => actions[+b.dataset.a].run());
+  $('#cancel').onclick = closeSheet;
+}
 function toast(message, undo) {
   const el = $('#toast');
   clearTimeout(toastTimer);
