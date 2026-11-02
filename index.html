@@ -198,6 +198,13 @@ details.row[open] .chev{transform:rotate(90deg)}
 #toast button{flex:none;min-height:44px;padding:0 4px;border:0;background:none;color:#64aaff;font-weight:600;font-size:var(--sub-t)}
 #toast button:active{opacity:.5}
 button:focus-visible,summary:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+/* ホーム画面アプリの高さ。古い版で追加したアイコンは画面がステータスバーの下から始まり、100lvh だと下がはみ出す。
+   100% は「新しい形では上の余白ぶん短く、古い形ではちょうど」なので、上の余白を足すとどちらでも画面に収まる */
+@media (display-mode: standalone) {
+  html:root{height:100%}
+  html body{height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}
+  #sheetWrap#sheetWrap{height:min(100lvh,calc(100% + env(safe-area-inset-top,0px)))}
+}
 </style>
 <style>
 html{position:fixed;top:0;right:0;bottom:0;left:0;height:auto;padding:0;overflow:hidden}
@@ -585,10 +592,22 @@ function renderSettings() {
       <button class="row action" id="backup">バックアップを保存</button>
       <button class="row action" id="restore">バックアップから戻す</button></div>
     <p class="foot">記録はこの iPhone の中だけにあります。ほかの端末とは同期しません。ホーム画面のアイコンを消すと、記録も消えます。</p>
-    <h2 class="h">実施状況</h2><div class="list"><button class="row action danger" id="delAll">実施状況をすべて削除</button></div>`;
+    <h2 class="h">実施状況</h2><div class="list"><button class="row action danger" id="delAll">実施状況をすべて削除</button></div>
+    <p class="foot" id="screenInfo"></p>`;
+  showScreenInfo();
   $('#backup').onclick = exportBackup;
   $('#restore').onclick = () => $('#restoreFile').click();
   $('#delAll').onclick = confirmDeleteAll;
+}
+// 実機で高さを確かめるための一時的な表示。直ったことを確かめたら消す
+function showScreenInfo() {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:absolute;visibility:hidden;height:100lvh;padding-top:env(safe-area-inset-top,0px);box-sizing:content-box;width:0';
+  document.body.appendChild(probe);
+  const lvh = probe.clientHeight - parseFloat(getComputedStyle(probe).paddingTop), safe = parseFloat(getComputedStyle(probe).paddingTop);
+  probe.remove();
+  const body = document.body.getBoundingClientRect(), bar = tabs.getBoundingClientRect();
+  $('#screenInfo').textContent = `画面の情報：内側${innerHeight} / 全高${Math.round(lvh)} / 上余白${Math.round(safe)} / 本体${Math.round(body.top)}〜${Math.round(body.bottom)} / タブ下端${Math.round(bar.bottom)}`;
 }
 function markBackedUp() { save(BACKUP_KEY, new Date().toISOString()); if (!view) render(); }
 function downloadFile(file) {
