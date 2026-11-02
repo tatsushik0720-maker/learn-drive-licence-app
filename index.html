@@ -262,6 +262,16 @@ function slides(t) {
   (t.ill || []).forEach((s, i) => list.push({ number: 91 + i, keys: [1, 2, 3].map(j => `${91 + i}-${j}`), scene: s }));
   return list;
 }
+// 解く順に並べた問題。練習モードは始めるときに混ぜた順番（order）を使う
+function sessionSlides(s) {
+  const list = slides(setOf(s.set));
+  return s.order ? s.order.map(i => list[i]) : list;
+}
+function shuffledOrder(n) {
+  const a = Array.from({ length: n }, (_, i) => i);
+  for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
 function expected(t, key) {
   if (key.includes('-')) { const [n, j] = key.split('-').map(Number); return t.ill[n - 91].items[j - 1].a; }
   return t.q[+key - 1].a;
@@ -392,7 +402,7 @@ function answeredCount(s) { return slides(setOf(s.set)).filter(sl => slideDone(s
 
 function openStart(name, mode = 'exam') {
   const t = setOf(name);
-  const note = mode === 'exam' ? `時間を計ります。${t.minutes}分たつと自動で採点し、正解と解説は終わってから見られます。` : '時間は計りません。答えるたびに正解と解説が出ます。';
+  const note = mode === 'exam' ? `時間を計ります。${t.minutes}分たつと自動で採点し、正解と解説は終わってから見られます。` : '時間は計りません。問題はランダムな順番で出て、答えるたびに正解と解説が出ます。';
   const warn = session ? `<p class="sh-warn">始めると、途中の ${session.set} は消えます。</p>` : '';
   openSheet(`<div class="sh-bar"><button class="bar-btn" id="cancel">キャンセル</button><h2>${t.kind} ${t.name}</h2><span></span></div>
     <p class="sh-info">${questionCount(t)}問・${t.minutes}分・${PASS}点以上で合格</p>
@@ -403,6 +413,7 @@ function openStart(name, mode = 'exam') {
   $('#cancel').onclick = closeSheet;
   $('#go').onclick = () => {
     session = { set: name, mode, answers: {}, index: 0, endAt: mode === 'exam' ? Date.now() + t.minutes * 60000 : null };
+    if (mode === 'practice') session.order = shuffledOrder(questionCount(t));
     saveSession();
     view = { type: 'exam' };
     render();
@@ -426,9 +437,9 @@ function renderExam() {
   if (!s) { view = null; return render(); }
   const t = setOf(s.set);
   if (s.mode === 'exam' && remaining(s) <= 0) return finish(true);
-  const list = slides(t);
+  const list = sessionSlides(s);
   s.index = Math.max(0, Math.min(s.index, list.length - 1));
-  const sl = list[s.index];
+  const sl = list[s.index], pos = s.index + 1;
   const clock = s.mode === 'exam' ? `<span class="clock" id="clock" role="timer" aria-label="残り時間">${fmtClock(remaining(s))}</span>` : '';
   barHeader('<button class="bar-btn" id="endBtn">終わる</button>', `${t.name}・${modeText(s.mode)}`, `${answeredCount(s)} / ${list.length} 問に回答`, clock);
   $('#endBtn').onclick = openEnd;
@@ -442,25 +453,25 @@ function renderExam() {
     tick = setInterval(update, 1000);
   }
   if (sl.q) {
-    main.innerHTML = `<div class="q-no">問題 ${sl.number} / ${list.length}</div><p class="q-text">${esc(sl.q.t)}</p>
+    main.innerHTML = `<div class="q-no">${s.order ? `${pos}問目 / ${list.length}（問題番号 ${sl.number}）` : `問題 ${sl.number} / ${list.length}`}</div><p class="q-text">${esc(sl.q.t)}</p>
       ${sl.q.img ? `<img class="q-img" src="${sl.q.img}" alt="問題${sl.number}の標識や図">` : ''}
       ${markButtons(sl.keys[0], s.mode === 'practice' && !!s.answers[sl.keys[0]])}${feedback(t, sl.keys[0], sl.q.e)}`;
   } else {
-    main.innerHTML = `<div class="q-no">イラスト問題 ${sl.number}（3つとも正解で2点）</div><p class="q-text">${esc(sl.scene.stem)}</p>
+    main.innerHTML = `<div class="q-no">${s.order ? `${pos}問目・` : ''}イラスト問題 ${sl.number}（3つとも正解で2点）</div><p class="q-text">${esc(sl.scene.stem)}</p>
       <img class="q-img wide" src="${sl.scene.img}" alt="問題${sl.number}のイラスト">
       ${sl.scene.items.map((it, j) => `<div class="item"><p class="q-text"><b>問${j + 1}</b> ${esc(it.t)}</p>${markButtons(sl.keys[j], s.mode === 'practice' && !!s.answers[sl.keys[j]])}${feedback(t, sl.keys[j], it.e)}</div>`).join('')}`;
   }
   main.querySelectorAll('.mark').forEach(b => b.onclick = () => answer(b.dataset.k, b.dataset.v));
   tabs.className = 'tabs nav';
   const last = s.index === list.length - 1;
-  tabs.innerHTML = `<button id="prev" ${s.index ? '' : 'disabled'}>前へ</button><button id="pal" class="count" aria-label="問題番号の一覧を開く">${sl.number} / ${list.length}</button><button id="next" class="primary">${last ? '終わる' : '次へ'}</button>`;
+  tabs.innerHTML = `<button id="prev" ${s.index ? '' : 'disabled'}>前へ</button><button id="pal" class="count" aria-label="問題の一覧を開く">${pos} / ${list.length}</button><button id="next" class="primary">${last ? '終わる' : '次へ'}</button>`;
   $('#prev').onclick = () => go(s.index - 1);
   $('#next').onclick = () => last ? openEnd() : go(s.index + 1);
   $('#pal').onclick = openPalette;
 }
 function go(i) { session.index = i; saveSession(); render(); main.scrollTop = 0; }
 function answer(key, value) {
-  const t = setOf(session.set), list = slides(t), sl = list[session.index];
+  const list = sessionSlides(session), sl = list[session.index];
   const y = main.scrollTop;
   session.answers[key] = value;
   saveSession();
@@ -470,12 +481,12 @@ function answer(key, value) {
   main.scrollTop = y;
 }
 function openPalette() {
-  const s = session, t = setOf(s.set), list = slides(t);
+  const s = session, t = setOf(s.set), list = sessionSlides(s);
   openSheet(`<div class="sh-bar"><button class="bar-btn" id="cancel">閉じる</button><h2>問題を選ぶ</h2><span></span></div><div class="palette">${list.map((sl, i) => {
     let c = '', state = '未回答';
     if (slideDone(sl, s.answers)) { c = 'done'; state = '回答ずみ'; }
     if (s.mode === 'practice' && sl.keys.some(k => s.answers[k] && s.answers[k] !== expected(t, k))) { c = 'ng'; state = '不正解'; }
-    return `<button class="${c} ${i === s.index ? 'here' : ''}" data-i="${i}" aria-label="問題${sl.number} ${state}">${sl.number}</button>`;
+    return `<button class="${c} ${i === s.index ? 'here' : ''}" data-i="${i}" aria-label="${i + 1}問目 問題番号${sl.number} ${state}">${i + 1}</button>`;
   }).join('')}</div>`);
   $('#sheet').querySelectorAll('[data-i]').forEach(b => b.onclick = () => { closeSheet(); go(+b.dataset.i); });
   $('#cancel').onclick = closeSheet;
