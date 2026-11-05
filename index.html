@@ -604,14 +604,21 @@ function renderHistory() {
   largeHeader('実施状況', history.length ? `${history.length} 件の記録` : '', edit);
   if ($('#editBtn')) $('#editBtn').onclick = () => { const y = main.scrollTop; editing = !editing; renderHistory(); main.scrollTop = y; };
   if (!history.length) { main.innerHTML = '<div class="empty"><b>記録はありません</b><span>試験か練習を終えると、ここに残ります。</span></div>'; return; }
-  const rows = history.map((a, i) => {
+  // 特（仮免許）・No（本免許）・現象 ごとに分けて、それぞれ新しい順に並べる
+  const GROUPS = [['仮免許', '特（仮免許）'], ['本免許', 'No（本免許）'], ['現象', '現象']];
+  const kindOf = a => (setOf(a.set) || {}).kind || a.kind;
+  const row = (a, i) => {
     const verdict = a.mode === 'exam' && !(setOf(a.set) || {}).practiceOnly ? (a.score >= PASS ? '・合格' : '・不合格') : '';
     const inner = `<span class="main">${esc(a.set)}・${modeText(a.mode)}<small>${whenText(a)}${verdict}</small></span><span class="val"><b>${a.score}</b> 点</span>`;
     return editing
       ? `<div class="row">${inner}<button class="row-del" data-del="${i}" aria-label="${esc(a.set)} ${whenText(a)} の記録を削除">削除</button></div>`
       : `<button class="row" data-i="${i}">${inner}${CHEV}</button>`;
+  };
+  const sections = GROUPS.map(([kind, label]) => {
+    const items = history.map((a, i) => [a, i]).filter(([a]) => kindOf(a) === kind);
+    return items.length ? `<h2 class="h">${label}・${items.length} 件</h2><div class="list">${items.map(([a, i]) => row(a, i)).join('')}</div>` : '';
   }).join('');
-  main.innerHTML = `<div class="list">${rows}</div>` + (editing ? '<div class="list mt"><button class="row action danger" id="delAll">すべて削除</button></div>' : '');
+  main.innerHTML = sections + (editing ? '<div class="list mt"><button class="row action danger" id="delAll">すべて削除</button></div>' : '');
   main.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { reviewFilter = 'wrong'; view = { type: 'review', attempt: history[+b.dataset.i] }; render(); });
   main.querySelectorAll('[data-del]').forEach(b => b.onclick = () => deleteAttempt(history[+b.dataset.del]));
   if ($('#delAll')) $('#delAll').onclick = confirmDeleteAll;
